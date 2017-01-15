@@ -14,7 +14,11 @@ TEST_SIGNAL = np.random.randint(1, 10, 15)
 MIN_FEATURE = get_feature(TEST_SIGNAL, 'min')
 MAX_FEATURE = get_feature(TEST_SIGNAL, 'max')
 
-FEATURE_SPACE_RETURN = [(MIN_FEATURE(seg), MAX_FEATURE(seg)) for seg in TEST_SEGMENTS]
+FEATURE_SPACE_RETURN = np.array([(MIN_FEATURE(seg), MAX_FEATURE(seg)) for seg in TEST_SEGMENTS])
+
+TEST_FEATURE_NAMES = ['test_signal_min', 'test_signal_max']
+TEST_LABELS = ['test_label'] * len(TEST_SEGMENTS)
+TEST_TARGETS = np.array([0] * 3)
 
 
 def mock_feature_space():
