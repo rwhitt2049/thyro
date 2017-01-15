@@ -1,20 +1,34 @@
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 
-class Dataset:
-    def __init__(self, feature_space, feature_names, labels=None):
+# think about what needs to happen if you concat a bunch of datasets.
+# check if feature_names are all the same
+# Append labels end to end in order
+# append feature_domain end to end in order
+# Feature space.... this is currently assumed to be a FeatureSpace generator,
+# make a genertor of generators
+
+# feature_space = (feature_fector for feature_space in feature_spaces
+#                                     for feature_vector in feature_space)
+
+
+class DataSet:
+    def __init__(self, feature_space, feature_names, labels=None, feature_domain=None):
         self.feature_space = feature_space
         self.feature_names = feature_names
         self._labels = labels
+        self.feature_domain = feature_domain
 
     @property
     def data(self):
+        #cache this?
         return np.array(list(self.feature_space))
 
     @property
     def labels(self):
-        if self.labels is None:
+        if self._labels is None:
             return ['None'] * len(self.feature_space)
         elif isinstance(self._labels, str):
             return [self._labels] * len(self.feature_space)
@@ -26,11 +40,20 @@ class Dataset:
 
     @property
     def target_names(self):
-        return set(self.labels)
+        return self._encoder.classes_
 
-    # @property
-    # def targets(self):
-    #     return np.array() # encoded labels
+    @property
+    def _encoder(self):
+        # Need to cache
+        le = LabelEncoder()
+        # If caching, should probably just do fit_transform
+        le.fit(self.labels)
+        return le
+
+    @property
+    def targets(self):
+        # Need to cache
+        return self._encoder.transform(self.labels)
 
     def as_dataframe(self, include_targets=True, include_labels=True, annotations=None):
         index = pd.RangeIndex(len(self.feature_space))
