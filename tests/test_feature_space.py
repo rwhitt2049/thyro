@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
+import numpy.testing as npt
 
 from tests.testing_utils import (TEST_SEGMENTS, FEATURE_SPACE_RETURN,
                                  MAX_FEATURE, MIN_FEATURE)
@@ -18,10 +19,10 @@ class TestFeatureSpace(TestCase):
         self.assertEqual(self.feature_space.shape, (3, 2))
 
     def test_output(self):
-        test = [feature_vector for feature_vector in self.feature_space]
+        test = np.array([feature_vector for feature_vector in self.feature_space])
         control = FEATURE_SPACE_RETURN
 
-        self.assertEqual(test, control)
+        npt.assert_equal(test, control)
 
     def test_output_shape(self):
         test = np.array([feature_vector for feature_vector in self.feature_space])

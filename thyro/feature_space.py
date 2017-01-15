@@ -1,3 +1,5 @@
+import numpy as np
+
 class FeatureSpace:
     def __init__(self, segments, *features):
         if hasattr(segments, '__iter__') and not isinstance(segments, str):
@@ -16,4 +18,4 @@ class FeatureSpace:
 
     def __iter__(self):
         for segment in self.segments:
-            yield tuple(feature(segment) for feature in self.features)
+            yield np.array([feature(segment) for feature in self.features])
