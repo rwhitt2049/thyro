@@ -43,3 +43,11 @@ class TestFeatureCallableClass(TestCase):
         test_slice = slice(2, 6)
         test = self.feature(test_slice)
         self.assertEqual(test, self.data[test_slice].mean())
+
+
+class TestFeatureCallableNotStrOrCallable(TestCase):
+    def test_bad_arguement(self):
+        """Test TypeError is raised if arg isn't a callable"""
+        bad_call = 5
+        with self.assertRaises(TypeError):
+            get_feature(TEST_SIGNAL, bad_call)
