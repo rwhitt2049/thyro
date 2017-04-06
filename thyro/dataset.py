@@ -2,6 +2,11 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
+from thyro.feature_space import FeatureSpace
+from thyro.features import get_feature
+
+__all__ = ['DataSet', 'get_dataset']
+
 
 # think about what needs to happen if you concat a bunch of datasets.
 # check if feature_names are all the same
@@ -76,3 +81,43 @@ class DataSet:
         dfs = filter(lambda x: False if x is None else True, [label_df, target_df, data_df])
 
         return pd.concat(dfs, axis=1, copy=False)
+
+
+def dedupe(seq):
+    value = []
+    uniques = set()
+    set_add = uniques.add
+    for item in seq:
+        if item not in uniques:
+            value.append(item)
+        set_add(item)
+
+    return value
+
+
+def get_dataset(config, data, user_features=None, default_operations=None, label=None):
+    if user_features is None:
+        user_features = []
+
+    domain = [feature.domain for feature in user_features]
+    feature_names = [feature.name for feature in user_features]
+
+    for settings in config:
+        operations = settings.get('operations', default_operations)
+        operations.extend(default_operations)
+        uniq_ops = dedupe(operations)
+
+        _data = data[settings['signal_name']]
+
+        for op in uniq_ops:
+            feature_name = '_'.join(
+                [settings.get('display_name', settings['signal_name']), op])
+            user_features.append(get_feature(_data, op))
+            domain.append(settings.get('categorical', False))
+            feature_names.append(feature_name)
+
+    feature_space = FeatureSpace([slice(10, 50), slice(100, 200)], *user_features)
+
+    dataset = DataSet(feature_space, feature_names, labels=label, feature_domain=domain)
+
+    return dataset
