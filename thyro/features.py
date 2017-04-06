@@ -1,6 +1,9 @@
-import numpy as np
-from collections import Callable
 from abc import ABCMeta, abstractmethod
+from collections import Callable
+
+import numpy as np
+
+__all__ = ['Feature', 'get_feature', 'BaseFeature']
 
 
 FACTORY = {
@@ -10,7 +13,7 @@ FACTORY = {
 }
 
 
-class ABFeature(metaclass=ABCMeta):
+class BaseFeature(metaclass=ABCMeta):
     @abstractmethod
     def __init__(self, data, operation):
         self.data = data
@@ -21,9 +24,10 @@ class ABFeature(metaclass=ABCMeta):
         return self.operation(self.data[item])
 
 
-class Feature(ABFeature):
-    def __init__(self, data, operation):
+class Feature(BaseFeature):
+    def __init__(self, data, operation, domain=None):
         super().__init__(data, operation)
+        self.domain = domain
 
     def __call__(self, item=slice(None, None)):
         return self.operation(self.data[item])

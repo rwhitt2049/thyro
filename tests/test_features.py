@@ -1,7 +1,7 @@
-from typing import Callable
 from unittest import TestCase
 
 import numpy as np
+from typing import Callable
 
 from tests.testing_utils import TEST_SIGNAL
 from thyro.features import get_feature, Feature

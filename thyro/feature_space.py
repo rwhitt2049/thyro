@@ -1,5 +1,9 @@
 import numpy as np
 
+
+__all__ = ['FeatureSpace']
+
+
 class FeatureSpace:
     def __init__(self, segments, *features):
         if hasattr(segments, '__iter__') and not isinstance(segments, str):
