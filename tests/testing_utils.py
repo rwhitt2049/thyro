@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, PropertyMock
 import numpy as np
-from thyro.features import get_feature
+from thyro.features import create_feature
 from collections import namedtuple
 
 
@@ -11,8 +11,8 @@ np.random.seed(10)
 TEST_SEGMENTS = [slice(2, 5), slice(6, 9), slice(12, 15)]
 
 TEST_SIGNAL = np.random.randint(1, 10, 15)
-MIN_FEATURE = get_feature(TEST_SIGNAL, 'min')
-MAX_FEATURE = get_feature(TEST_SIGNAL, 'max')
+MIN_FEATURE = create_feature(TEST_SIGNAL, 'min')
+MAX_FEATURE = create_feature(TEST_SIGNAL, 'max')
 
 FEATURE_SPACE_RETURN = np.array([(MIN_FEATURE(seg), MAX_FEATURE(seg)) for seg in TEST_SEGMENTS])
 

@@ -10,7 +10,7 @@ from thyro.feature_space import FeatureSpace
 
 class TestFeatureSpace(TestCase):
     def setUp(self):
-        self.feature_space = FeatureSpace(TEST_SEGMENTS, MIN_FEATURE, MAX_FEATURE)
+        self.feature_space = FeatureSpace(MIN_FEATURE, MAX_FEATURE, segments=TEST_SEGMENTS)
 
     def test_len(self):
         self.assertEqual(len(self.feature_space), 3)
@@ -30,4 +30,4 @@ class TestFeatureSpace(TestCase):
 
     def test_segment_type_error(self):
         with self.assertRaises(TypeError):
-            FeatureSpace('a', MIN_FEATURE, MAX_FEATURE)
+            FeatureSpace(MIN_FEATURE, MAX_FEATURE, segments='a')
