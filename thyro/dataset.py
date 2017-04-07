@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
 from thyro.feature_space import FeatureSpace
-from thyro.features import get_feature
+from thyro.features import create_feature
 
 __all__ = ['DataSet', 'get_dataset']
 
@@ -24,21 +24,28 @@ class DataSet:
         self.feature_space = feature_space
         self.feature_names = feature_names
         self._labels = labels
+        # TODO Rename to is_categorical
         self.feature_domain = feature_domain
 
     @property
     def data(self):
-        #cache this?
+        # TODO Cache
         return np.array(list(self.feature_space))
 
     @property
     def labels(self):
+        # TODO Simplify, consequences of EAFP?
+
+        if isinstance(self._labels, str):
+            return [self._labels] * len(self.feature_space)
         if self._labels is None:
             return ['None'] * len(self.feature_space)
-        elif isinstance(self._labels, str):
-            return [self._labels] * len(self.feature_space)
         elif isinstance(self._labels, list):
-            return self._labels
+            if len(self._labels) != len(self.feature_space):
+                raise ValueError('If labels is specified as a sequence, it\'s length'
+                                 'must equal the number of feature vectors in feature_space')
+            else:
+                return self._labels
         else:
             raise TypeError('Labels must None if unlabelled or be a string, '
                             'or a list of strings if labelled')
@@ -49,7 +56,7 @@ class DataSet:
 
     @property
     def _encoder(self):
-        # Need to cache
+        # TODO Need to cache
         le = LabelEncoder()
         # If caching, should probably just do fit_transform
         le.fit(self.labels)
@@ -57,10 +64,11 @@ class DataSet:
 
     @property
     def targets(self):
-        # Need to cache
+        # TODO Need to cache
         return self._encoder.transform(self.labels)
 
     def as_dataframe(self, include_targets=True, include_labels=True, annotations=None):
+        # TODO Remove annotations
         index = pd.RangeIndex(len(self.feature_space))
 
         if isinstance(annotations, pd.DataFrame):
@@ -96,6 +104,7 @@ def dedupe(seq):
 
 
 def get_dataset(config, data, user_features=None, default_operations=None, label=None):
+    # TODO rename to extract_features, extract_featureset... ?
     if user_features is None:
         user_features = []
 
@@ -112,7 +121,7 @@ def get_dataset(config, data, user_features=None, default_operations=None, label
         for op in uniq_ops:
             feature_name = '_'.join(
                 [settings.get('display_name', settings['signal_name']), op])
-            user_features.append(get_feature(_data, op))
+            user_features.append(create_feature(_data, op))
             domain.append(settings.get('categorical', False))
             feature_names.append(feature_name)
 
