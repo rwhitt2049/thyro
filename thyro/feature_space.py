@@ -5,11 +5,13 @@ __all__ = ['FeatureSpace']
 
 
 class FeatureSpace:
-    def __init__(self, segments, *features):
+    def __init__(self, *features, segments=None):
+        if segments is None:
+            self.segments = [slice(None, None)]
         if hasattr(segments, '__iter__') and not isinstance(segments, str):
             self.segments = segments
         else:
-            raise TypeError('The segments argument must be an iterable')
+            raise TypeError('segments argument must be a sequence')
 
         self.features = features
 
