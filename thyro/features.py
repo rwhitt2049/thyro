@@ -3,7 +3,7 @@ from collections import Callable
 
 import numpy as np
 
-__all__ = ['Feature', 'get_feature', 'BaseFeature']
+__all__ = ['Feature', 'create_feature', 'BaseFeature']
 
 
 FACTORY = {
@@ -13,38 +13,49 @@ FACTORY = {
 }
 
 
-class BaseFeature(metaclass=ABCMeta):
-    @abstractmethod
-    def __init__(self, data, operation):
-        self.data = data
-        self.operation = operation
-
-    @abstractmethod
-    def __call__(self, item=slice(None, None)):
-        return self.operation(self.data[item])
-
-
-class Feature(BaseFeature):
-    def __init__(self, data, operation, domain=None):
-        super().__init__(data, operation)
-        self.domain = domain
-
-    def __call__(self, item=slice(None, None)):
-        return self.operation(self.data[item])
-
-
-def get_feature(data, operation):
+def operation_factory(operation):
     if isinstance(operation, str):
         try:
-            _function = FACTORY[operation]
+            _operation = FACTORY[operation]
         except KeyError:
             raise NotImplementedError('%s is not implemented' % operation)
     elif isinstance(operation, Callable):
-        _function = operation
+        _operation = operation
     else:
         raise TypeError('%s must be a callable or a string name for a default operation.' % operation)
 
+    return _operation
+
+
+class BaseFeature(metaclass=ABCMeta):
+    @abstractmethod
+    def __call__(self):
+        pass
+
+
+class Feature(BaseFeature):
+    def __init__(self, data, operation, name, is_categorical=False):
+        self.data = data
+        self.name = name
+        self._operation = operation
+        if isinstance(is_categorical, bool):
+            self.is_categorical = is_categorical
+        else:
+            raise TypeError('is_categorical must be a bool')
+
+    @property
+    def operation(self):
+        # TODO cache
+        return operation_factory(self._operation)
+
+    def __call__(self, item=slice(None, None)):
+        return self.operation(self.data[item])
+
+
+def create_feature(data, operation):
+    _operation = operation_factory(operation)
+
     def _call(item=slice(None, None)):
-        return _function(data[item])
+        return _operation(data[item])
 
     return _call
