@@ -29,12 +29,6 @@ class LabeledDataSet:
         self.targets = self._encoder.fit_transform(self.labels)
 
     @property
-    def data(self):
-        # TODO Cache?
-        # TODO return as a sparse matrix with option to return as numpy array
-        return np.array(list(self.feature_space))
-
-    @property
     def labels(self):
         # TODO Simplify, consequences of EAFP?
 

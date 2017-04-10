@@ -15,7 +15,7 @@ class TestSimpleDataSet(TestCase):
         self.dataset = LabeledDataSet(MOCKED_FEATURE_SPACE, TEST_FEATURE_NAMES, TEST_LABELS)
 
     def test_dataset_data(self):
-        test = self.dataset.data
+        test = self.dataset.data(sparse=False)
         npt.assert_equal(test, FEATURE_SPACE_RETURN)
 
     def test_dataset_feature_names(self):
