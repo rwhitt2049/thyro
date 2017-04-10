@@ -100,30 +100,40 @@ def dedupe(seq):
     return value
 
 
-def get_dataset(config, data, user_features=None, default_operations=None, label=None):
+# EXPERIMENTAL FEATURE
+def get_dataset(config, data, segments=None, user_features=None, default_statistics=None, labels=None):
+    import warnings; warnings.warn('THIS IS EXPERIMENT AND SUBJECT TO CHANGE SIGNIFICANTLY')
     # TODO rename to extract_features, extract_featureset... ?
     if user_features is None:
         user_features = []
 
-    domain = [feature.domain for feature in user_features]
+    if segments is None:
+        segments = [slice(None, None)]
+
+    nominal_features = [feature.is_nominal for feature in user_features]
     feature_names = [feature.name for feature in user_features]
 
     for settings in config:
-        operations = settings.get('operations', default_operations)
-        operations.extend(default_operations)
-        uniq_ops = dedupe(operations)
+        statistics = settings.get('statistics', default_statistics)
+        statistics.extend(default_statistics)
+        uniq_stats = dedupe(statistics)
 
         _data = data[settings['signal_name']]
 
-        for op in uniq_ops:
+        for stat in uniq_stats:
             feature_name = '_'.join(
-                [settings.get('display_name', settings['signal_name']), op])
-            user_features.append(create_feature(_data, op))
-            domain.append(settings.get('categorical', False))
+                [settings.get('display_name', settings['signal_name']), stat])
+            user_features.append(create_feature(_data, stat))
+            nominal_features.append(settings.get('is_nominal', False))
             feature_names.append(feature_name)
 
-    feature_space = FeatureSpace([slice(10, 50), slice(100, 200)], *user_features)
+    feature_space = FeatureSpace(segments, *user_features)
 
-    dataset = LabeledDataSet(feature_space, feature_names, labels=label, feature_domain=domain)
+    if labels is None:
+        dataset = UnlabeledDataSet(feature_space, feature_names, labels=labels,
+                                   nominal_features=nominal_features)
+    else:
+        dataset = LabeledDataSet(feature_space, feature_names, labels=labels,
+                                 nominal_features=nominal_features)
 
     return dataset
