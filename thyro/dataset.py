@@ -47,28 +47,18 @@ class LabeledDataSet:
     def target_names(self):
         return self._encoder.classes_
 
-    def as_dataframe(self, include_targets=True, include_labels=True, annotations=None):
-        # TODO Remove annotations
+    def as_dataframe(self, include_targets=True, include_labels=True):
         index = pd.RangeIndex(len(self.feature_space))
 
-        if isinstance(annotations, pd.DataFrame):
-            annotations.reindex(index=index)
-
-        if include_labels:
-            label_df = pd.DataFrame(self.labels, index, ['label'])
-        else:
-            label_df = None
+        df = pd.DataFrame(self.data(sparse=False), index, self.feature_names)
 
         if include_targets:
-            target_df = pd.DataFrame(self.targets, index, ['targets'])
-        else:
-            target_df = None
+            df.insert(0, 'targets', self.targets)
 
-        data_df = pd.DataFrame(self.data, index, self.feature_names)
+        if include_labels:
+            df.insert(0, 'labels', self.labels)
 
-        dfs = filter(lambda x: False if x is None else True, [label_df, target_df, data_df])
-
-        return pd.concat(dfs, axis=1, copy=False)
+        return df
 
 
 def dedupe(seq):

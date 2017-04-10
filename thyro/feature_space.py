@@ -11,7 +11,7 @@ class FeatureSpace:
         if hasattr(segments, '__iter__') and not isinstance(segments, str):
             self.segments = segments
         else:
-            raise TypeError('segments argument must be a sequence')
+            raise TypeError('segments argument must be a sequence of slice objects')
 
         self.features = features
 
