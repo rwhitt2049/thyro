@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from functools import lru_cache
+from scipy.sparse import lil_matrix
+from abc import ABCMeta, abstractmethod
 
 from thyro.feature_space import FeatureSpace
 from thyro.features import create_feature
 
-__all__ = ['LabeledDataSet', 'get_dataset']
+__all__ = ['LabeledDataSet']
 
 
 # think about what needs to happen if you concat a bunch of datasets.
@@ -19,7 +22,31 @@ __all__ = ['LabeledDataSet', 'get_dataset']
 #                                     for feature_vector in feature_space)
 
 
-class LabeledDataSet:
+class BaseDataSet(metaclass=ABCMeta):
+    @lru_cache()
+    def data(self, sparse=True):
+        if sparse:
+            return lil_matrix(list(self.feature_space))
+        else:
+            return np.array(list(self.feature_space))
+
+    @abstractmethod
+    def as_dataframe(self):
+        pass
+
+
+class UnlabeledDataSet(BaseDataSet):
+    def __init__(self, feature_space, feature_names, nominal_features=None):
+        self.feature_space = feature_space
+        self.feature_names = feature_names
+        self.nominal_features = nominal_features
+
+    def as_dataframe(self):
+        index = pd.RangeIndex(len(self.feature_space))
+        return pd.DataFrame(self.data(sparse=False), index, self.feature_names)
+
+
+class LabeledDataSet(BaseDataSet):
     def __init__(self, feature_space, feature_names, labels, nominal_features=None):
         self.feature_space = feature_space
         self.feature_names = feature_names
