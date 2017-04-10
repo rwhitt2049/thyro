@@ -34,14 +34,14 @@ class BaseFeature(metaclass=ABCMeta):
 
 
 class Feature(BaseFeature):
-    def __init__(self, data, operation, name, is_categorical=False):
+    def __init__(self, data, operation, name, is_nominal=False):
         self.data = data
         self.name = name
         self._operation = operation
-        if isinstance(is_categorical, bool):
-            self.is_categorical = is_categorical
+        if isinstance(is_nominal, bool):
+            self.is_nominal = is_nominal
         else:
-            raise TypeError('is_categorical must be a bool')
+            raise TypeError('is_nominal must be a bool')
 
     @property
     def operation(self):

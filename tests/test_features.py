@@ -44,12 +44,12 @@ class TestFeatureCallableClass(TestCase):
         test = self.feature(test_slice)
         self.assertEqual(test, self.data[test_slice].mean())
 
-    def test_categorical_false(self):
-        self.assertFalse(self.feature.is_categorical)
+    def test_domain(self):
+        with self.assertRaises(TypeError):
+            Feature(self.data, np.mean, 'test', 'nominal')
 
-    def test_categorical_true(self):
-        feature = Feature(self.data, np.mean, 'test', is_categorical=True)
-        self.assertTrue(feature.is_categorical)
+    def test_is_nominal(self):
+        self.assertFalse(self.feature.is_nominal)
 
 
 class TestFeatureOperationTypeError(TestCase):

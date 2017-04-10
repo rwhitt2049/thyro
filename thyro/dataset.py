@@ -20,16 +20,16 @@ __all__ = ['DataSet', 'get_dataset']
 
 
 class DataSet:
-    def __init__(self, feature_space, feature_names, labels=None, feature_domain=None):
+    def __init__(self, feature_space, feature_names, labels=None, nominal_features=None):
         self.feature_space = feature_space
         self.feature_names = feature_names
         self._labels = labels
-        # TODO Rename to is_categorical
-        self.feature_domain = feature_domain
+        self.nominal_features = nominal_features
 
     @property
     def data(self):
-        # TODO Cache
+        # TODO Cache?
+        # TODO return as a sparse matrix with option to return as numpy array
         return np.array(list(self.feature_space))
 
     @property
@@ -47,7 +47,7 @@ class DataSet:
             else:
                 return self._labels
         else:
-            raise TypeError('Labels must None if unlabelled or be a string, '
+            raise TypeError('Labels must be None if unlabelled or be a string '
                             'or a list of strings if labelled')
 
     @property
