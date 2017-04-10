@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 from thyro.feature_space import FeatureSpace
 from thyro.features import create_feature
 
-__all__ = ['DataSet', 'get_dataset']
+__all__ = ['LabeledDataSet', 'get_dataset']
 
 
 # think about what needs to happen if you concat a bunch of datasets.
@@ -19,12 +19,14 @@ __all__ = ['DataSet', 'get_dataset']
 #                                     for feature_vector in feature_space)
 
 
-class DataSet:
-    def __init__(self, feature_space, feature_names, labels=None, nominal_features=None):
+class LabeledDataSet:
+    def __init__(self, feature_space, feature_names, labels, nominal_features=None):
         self.feature_space = feature_space
         self.feature_names = feature_names
-        self._labels = labels
         self.nominal_features = nominal_features
+        self._labels = labels
+        self._encoder = LabelEncoder()
+        self.targets = self._encoder.fit_transform(self.labels)
 
     @property
     def data(self):
@@ -38,8 +40,6 @@ class DataSet:
 
         if isinstance(self._labels, str):
             return [self._labels] * len(self.feature_space)
-        if self._labels is None:
-            return ['None'] * len(self.feature_space)
         elif isinstance(self._labels, list):
             if len(self._labels) != len(self.feature_space):
                 raise ValueError('If labels is specified as a sequence, it\'s length'
@@ -47,25 +47,11 @@ class DataSet:
             else:
                 return self._labels
         else:
-            raise TypeError('Labels must be None if unlabelled or be a string '
-                            'or a list of strings if labelled')
+            raise TypeError('Labels must be sequence of strings or a string.')
 
     @property
     def target_names(self):
         return self._encoder.classes_
-
-    @property
-    def _encoder(self):
-        # TODO Need to cache
-        le = LabelEncoder()
-        # If caching, should probably just do fit_transform
-        le.fit(self.labels)
-        return le
-
-    @property
-    def targets(self):
-        # TODO Need to cache
-        return self._encoder.transform(self.labels)
 
     def as_dataframe(self, include_targets=True, include_labels=True, annotations=None):
         # TODO Remove annotations
@@ -127,6 +113,6 @@ def get_dataset(config, data, user_features=None, default_operations=None, label
 
     feature_space = FeatureSpace([slice(10, 50), slice(100, 200)], *user_features)
 
-    dataset = DataSet(feature_space, feature_names, labels=label, feature_domain=domain)
+    dataset = LabeledDataSet(feature_space, feature_names, labels=label, feature_domain=domain)
 
     return dataset
