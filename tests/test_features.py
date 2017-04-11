@@ -16,7 +16,7 @@ class TestFeatureFunction(TestCase):
         self.assertIsInstance(self.feature, Callable)
 
     def test_call_with_defaults(self):
-        self.assertEqual(self.feature(), self.data.mean())
+        self.assertEqual(self.feature(slice(None, None)), self.data.mean())
 
     def test_returned_functionality(self):
         test_slice = slice(2, 6)
@@ -37,7 +37,7 @@ class TestFeatureCallableClass(TestCase):
         self.assertIsInstance(self.feature, Callable)
 
     def test_call_with_defaults(self):
-        self.assertEqual(self.feature(), self.data.mean())
+        self.assertEqual(self.feature(slice(None, None)), self.data.mean())
 
     def test_returned_functionality(self):
         test_slice = slice(2, 6)

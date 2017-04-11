@@ -1,9 +1,10 @@
+from abc import ABCMeta, abstractmethod
+from functools import lru_cache
+
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
-from functools import lru_cache
 from scipy.sparse import lil_matrix
-from abc import ABCMeta, abstractmethod
+from sklearn.preprocessing import LabelEncoder
 
 from thyro.feature_space import FeatureSpace
 from thyro.features import create_feature
@@ -11,24 +12,17 @@ from thyro.features import create_feature
 __all__ = ['LabeledDataSet']
 
 
-# think about what needs to happen if you concat a bunch of datasets.
-# check if feature_names are all the same
-# Append labels end to end in order
-# append feature_domain end to end in order
-# Feature space.... this is currently assumed to be a FeatureSpace generator,
-# make a genertor of generators
-
-# feature_space = (feature_fector for feature_space in feature_spaces
-#                                     for feature_vector in feature_space)
-
-
 class BaseDataSet(metaclass=ABCMeta):
+    @abstractmethod
+    def __init__(self, feature_space):
+        self.feature_space = feature_space
+
     @lru_cache()
     def data(self, sparse=True):
         if sparse:
-            return lil_matrix(list(self.feature_space))
+            return lil_matrix(self.feature_space)
         else:
-            return np.array(list(self.feature_space))
+            return np.array(self.feature_space)
 
     @abstractmethod
     def as_dataframe(self):
@@ -37,7 +31,7 @@ class BaseDataSet(metaclass=ABCMeta):
 
 class UnlabeledDataSet(BaseDataSet):
     def __init__(self, feature_space, feature_names, nominal_features=None):
-        self.feature_space = feature_space
+        super().__init__(feature_space)
         self.feature_names = feature_names
         self.nominal_features = nominal_features
 
@@ -48,7 +42,7 @@ class UnlabeledDataSet(BaseDataSet):
 
 class LabeledDataSet(BaseDataSet):
     def __init__(self, feature_space, feature_names, labels, nominal_features=None):
-        self.feature_space = feature_space
+        super().__init__(feature_space)
         self.feature_names = feature_names
         self.nominal_features = nominal_features
         self._labels = labels
@@ -107,9 +101,6 @@ def get_dataset(config, data, segments=None, user_features=None, default_statist
     if user_features is None:
         user_features = []
 
-    if segments is None:
-        segments = [slice(None, None)]
-
     nominal_features = [feature.is_nominal for feature in user_features]
     feature_names = [feature.name for feature in user_features]
 
@@ -127,13 +118,15 @@ def get_dataset(config, data, segments=None, user_features=None, default_statist
             nominal_features.append(settings.get('is_nominal', False))
             feature_names.append(feature_name)
 
-    feature_space = FeatureSpace(segments, *user_features)
+    feature_space = FeatureSpace(*user_features, segments=segments)
+
+    feature_space_array = np.array(list(feature_space))
 
     if labels is None:
-        dataset = UnlabeledDataSet(feature_space, feature_names, labels=labels,
+        dataset = UnlabeledDataSet(feature_space_array, feature_names,
                                    nominal_features=nominal_features)
     else:
-        dataset = LabeledDataSet(feature_space, feature_names, labels=labels,
+        dataset = LabeledDataSet(feature_space_array, feature_names, labels=labels,
                                  nominal_features=nominal_features)
 
     return dataset
