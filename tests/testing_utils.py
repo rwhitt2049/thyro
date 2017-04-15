@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, PropertyMock
 
 import numpy as np
 
-from thyro.features import create_feature
+from tiko.features import create_feature
 
 ReturnsFS = namedtuple('ReturnsFS', 'len shape segments features iter')
 

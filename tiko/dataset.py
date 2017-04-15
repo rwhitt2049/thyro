@@ -9,8 +9,8 @@ from sklearn.preprocessing import LabelEncoder
 # TODO - lighten up dependencies, make both scipy and sklearn optionl
 # Probably will need to do some try/except monkey patchery?
 
-from thyro.feature_space import FeatureSpace
-from thyro.features import create_feature
+from tiko.feature_space import FeatureSpace
+from tiko.features import create_feature
 
 __all__ = ['LabeledDataSet']
 

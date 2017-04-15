@@ -3,7 +3,7 @@ from os import path
 
 from setuptools import find_packages, setup
 
-from thyro import __version__
+from tiko import __version__
 
 base = path.abspath(path.dirname(__file__))
 
@@ -24,14 +24,14 @@ def long_description():
 
 
 kwargs = dict(
-    name='thyro',
+    name='tiko',
     version=__version__,
     description='Create feature spaces from time series data for machine learning',
     long_description=long_description(),
     author='Ry Whittington',
     author_email='rwhitt2049@gmail.com',
     license='MIT',
-    url='https://github.com/rwhitt2049/thyro',
+    url='https://github.com/rwhitt2049/tiko',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
