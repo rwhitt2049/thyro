@@ -16,7 +16,7 @@ class TestSimpleDataSet(TestCase):
 
     def test_dataset_data(self):
         test = self.dataset.data(sparse=False)
-        npt.assert_equal(test, FEATURE_SPACE_RETURN)
+        npt.assert_equal(test, list(FEATURE_SPACE_RETURN))
 
     def test_dataset_feature_names(self):
         test = self.dataset.feature_names

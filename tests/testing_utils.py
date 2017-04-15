@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, PropertyMock
 
 import numpy as np
 
+from tiko.feature_space import FeatureSpace
 from tiko.features import create_feature
 
 ReturnsFS = namedtuple('ReturnsFS', 'len shape segments features iter')
@@ -23,7 +24,7 @@ TEST_TARGETS = np.array([0] * 3)
 
 
 def mock_feature_space():
-    mocked_fs = MagicMock()
+    mocked_fs = MagicMock(spec=FeatureSpace)
 
     mocked_len = 3
     mocked_fs.__len__.return_value = mocked_len
@@ -38,7 +39,6 @@ def mock_feature_space():
     _features = (MIN_FEATURE, MAX_FEATURE)
     features = PropertyMock(return_value=_features)
     type(mocked_fs).features = features
-
 
     mocked_fs.__iter__.return_value = FEATURE_SPACE_RETURN
 
