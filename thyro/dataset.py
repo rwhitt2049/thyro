@@ -45,6 +45,7 @@ class UnlabeledDataSet(BaseDataSet):
 
 class LabeledDataSet(BaseDataSet):
     def __init__(self, feature_space, feature_names, labels, nominal_features=None):
+        super().__init__(feature_space)
         # TODO - push nominal_features default specification up one level of abstraction to extract_features
         super().__init__(feature_space)
         self.feature_names = feature_names
