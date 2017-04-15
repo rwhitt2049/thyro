@@ -3,27 +3,45 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
-from scipy.sparse import lil_matrix
 from sklearn.preprocessing import LabelEncoder
-
-# TODO - lighten up dependencies, make both scipy and sklearn optionl
-# Probably will need to do some try/except monkey patchery?
 
 from tiko.feature_space import FeatureSpace
 from tiko.features import create_feature
 
+# TODO - lighten up dependencies, make both scipy and sklearn optionl
+# Probably will need to do some try/except monkey patchery?
+
 __all__ = ['LabeledDataSet']
 
 
-class BaseDataSet(metaclass=ABCMeta):
-    @abstractmethod
-    def __init__(self, feature_space):
-        self.feature_space = feature_space
+class DataSet(metaclass=ABCMeta):
+    def __init__(self, feature_space, feature_names, nominal_features):
+        if not isinstance(feature_space, FeatureSpace):
+            raise TypeError('feature_space must be a tiko.FeatureSpace.')
+        else:
+            self.feature_space = list(feature_space)
+
+        feature_count = feature_space.shape[1]
+
+        if len(feature_names) != feature_count:
+            raise ValueError('Number of features and feature_names mismatched')
+        else:
+            self.feature_names = feature_names
+
+        if nominal_features is None:
+            nominal_features = [False] * feature_count
+
+        self.nominal_features = nominal_features
 
     @lru_cache()
-    def data(self, sparse=True):
+    def data(self, sparse=False):
         if sparse:
-            return lil_matrix(self.feature_space)
+            try:
+                from scipy.sparse import lil_matrix
+            except ImportError:
+                raise ImportError('Returning data as sparse requires scipy')
+            else:
+                return lil_matrix(self.feature_space)
         else:
             return np.array(self.feature_space)
 
@@ -32,24 +50,19 @@ class BaseDataSet(metaclass=ABCMeta):
         pass
 
 
-class UnlabeledDataSet(BaseDataSet):
+class UnlabeledDataSet(DataSet):
     def __init__(self, feature_space, feature_names, nominal_features=None):
-        super().__init__(feature_space)
-        self.feature_names = feature_names
-        self.nominal_features = nominal_features
+        super().__init__(feature_space, feature_names, nominal_features)
 
     def as_dataframe(self):
         index = pd.RangeIndex(len(self.feature_space))
         return pd.DataFrame(self.data(sparse=False), index, self.feature_names)
 
 
-class LabeledDataSet(BaseDataSet):
+class LabeledDataSet(DataSet):
     def __init__(self, feature_space, feature_names, labels, nominal_features=None):
-        super().__init__(feature_space)
         # TODO - push nominal_features default specification up one level of abstraction to extract_features
-        super().__init__(feature_space)
-        self.feature_names = feature_names
-        self.nominal_features = nominal_features
+        super().__init__(feature_space, feature_names, nominal_features)
         self._labels = labels
         self._encoder = LabelEncoder()
         self.targets = self._encoder.fit_transform(self.labels)
@@ -62,7 +75,7 @@ class LabeledDataSet(BaseDataSet):
             return [self._labels] * len(self.feature_space)
         elif isinstance(self._labels, list):
             if len(self._labels) != len(self.feature_space):
-                raise ValueError('If labels is specified as a sequence, it\'s length'
+                raise ValueError('If labels are specified as a sequence, their length'
                                  'must equal the number of feature vectors in feature_space')
             else:
                 return self._labels
