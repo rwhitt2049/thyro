@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 import numpy.testing as npt
-from thyro.dataset import LabeledDataSet
+from tiko.dataset import LabeledDataSet
 
 from tests.testing_utils import (mock_feature_space, FEATURE_SPACE_RETURN,
                                  TEST_FEATURE_NAMES, TEST_LABELS, TEST_TARGETS)

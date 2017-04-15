@@ -5,7 +5,7 @@ import numpy.testing as npt
 
 from tests.testing_utils import (TEST_SEGMENTS, FEATURE_SPACE_RETURN,
                                  MAX_FEATURE, MIN_FEATURE)
-from thyro.feature_space import FeatureSpace
+from tiko.feature_space import FeatureSpace
 
 
 class TestFeatureSpace(TestCase):

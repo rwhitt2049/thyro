@@ -4,7 +4,7 @@ import numpy as np
 from typing import Callable
 
 from tests.testing_utils import TEST_SIGNAL
-from thyro.features import create_feature, Feature
+from tiko.features import create_feature, Feature
 
 
 class TestFeatureFunction(TestCase):
