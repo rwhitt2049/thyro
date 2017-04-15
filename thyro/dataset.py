@@ -6,6 +6,9 @@ import pandas as pd
 from scipy.sparse import lil_matrix
 from sklearn.preprocessing import LabelEncoder
 
+# TODO - lighten up dependencies, make both scipy and sklearn optionl
+# Probably will need to do some try/except monkey patchery?
+
 from thyro.feature_space import FeatureSpace
 from thyro.features import create_feature
 
@@ -42,6 +45,7 @@ class UnlabeledDataSet(BaseDataSet):
 
 class LabeledDataSet(BaseDataSet):
     def __init__(self, feature_space, feature_names, labels, nominal_features=None):
+        # TODO - push nominal_features default specification up one level of abstraction to extract_features
         super().__init__(feature_space)
         self.feature_names = feature_names
         self.nominal_features = nominal_features
@@ -95,28 +99,68 @@ def dedupe(seq):
 
 
 # EXPERIMENTAL FEATURE
-def get_dataset(config, data, segments=None, user_features=None, default_statistics=None, labels=None):
+def extract_features(config, data, segments=None, user_features=None, default_statistics=None, labels=None, **feature_factory):
+    """
+    
+    config structure
+    
+    list of dicts
+    dicts with keys
+        signal_name: str
+        display_name: str
+        statistics: list of str
+        is_nominal: bool
+        apply_default_statistics: bool
+    
+    Args:
+        config: 
+        data: 
+        segments: 
+        user_features: 
+        default_statistics: 
+        labels: 
+
+    Returns:
+
+    """
     import warnings; warnings.warn('THIS IS EXPERIMENT AND SUBJECT TO CHANGE SIGNIFICANTLY')
     # TODO rename to extract_features, extract_featureset... ?
+
+    if not hasattr(data, '__getitem__'):
+        raise TypeError('Your data must have a defined __getitem__ method')
+
     if user_features is None:
         user_features = []
 
+    if segments is None:
+        segments = [slice(None, None)]
+
+    features = user_features
     nominal_features = [feature.is_nominal for feature in user_features]
     feature_names = [feature.name for feature in user_features]
 
     for settings in config:
-        statistics = settings.get('statistics', default_statistics)
-        statistics.extend(default_statistics)
-        uniq_stats = dedupe(statistics)
+        signal_name = settings['signal_name']
+        signal = data[signal_name]
+        statistics = settings.get('statistics', [])
+        apply_default_statistics = settings.get('apply_default_statistics', True)
+        is_nominal = settings.get('is_nominal', False)
+        display_name = settings.get('display_name', signal_name)
 
-        _data = data[settings['signal_name']]
+        if apply_default_statistics:
+            statistics += list(set(default_statistics) - set(statistics))
+        elif not statistics:
+            raise ValueError('No statistics defined for %s' % signal_name)
 
-        for stat in uniq_stats:
-            feature_name = '_'.join(
-                [settings.get('display_name', settings['signal_name']), stat])
-            user_features.append(create_feature(_data, stat))
-            nominal_features.append(settings.get('is_nominal', False))
-            feature_names.append(feature_name)
+        for statistic in statistics:
+            if statistic in feature_factory:
+                feature = create_feature(signal, feature_factory[statistic])
+            else:
+                feature = create_feature(signal, statistic)
+
+            features.append(feature)
+            feature_names.append('_'.join([display_name, statistic]))
+            nominal_features.append(is_nominal)
 
     feature_space = FeatureSpace(*user_features, segments=segments)
 
