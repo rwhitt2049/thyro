@@ -26,13 +26,4 @@ class TestSimpleDataSet(TestCase):
         test = self.dataset.labels
         self.assertEqual(test, TEST_LABELS)
 
-    def test_dataset_target_names(self):
-        test = self.dataset.target_names
-        npt.assert_equal(test, np.array(['test_label']))
-
-    def test_targets(self):
-        test = self.dataset.targets
-        npt.assert_equal(test, TEST_TARGETS)
-
 # TODO test various ways to specify label
-# TODO test feature_domain
