@@ -3,13 +3,10 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 
 from tiko.feature_space import FeatureSpace
 from tiko.features import create_feature
 
-# TODO - lighten up dependencies, make both scipy and sklearn optionl
-# Probably will need to do some try/except monkey patchery?
 
 __all__ = ['LabeledDataSet']
 
@@ -35,15 +32,15 @@ class DataSet(metaclass=ABCMeta):
 
     @lru_cache()
     def data(self, sparse=False):
-        if sparse:
+        if not sparse:
+            return np.array(self.feature_space)
+        else:
             try:
                 from scipy.sparse import lil_matrix
             except ImportError:
                 raise ImportError('Returning data as sparse requires scipy')
             else:
                 return lil_matrix(self.feature_space)
-        else:
-            return np.array(self.feature_space)
 
     @abstractmethod
     def as_dataframe(self):
@@ -64,8 +61,6 @@ class LabeledDataSet(DataSet):
         # TODO - push nominal_features default specification up one level of abstraction to extract_features
         super().__init__(feature_space, feature_names, nominal_features)
         self._labels = labels
-        self._encoder = LabelEncoder()
-        self.targets = self._encoder.fit_transform(self.labels)
 
     @property
     def labels(self):
@@ -81,10 +76,6 @@ class LabeledDataSet(DataSet):
                 return self._labels
         else:
             raise TypeError('Labels must be sequence of strings or a string.')
-
-    @property
-    def target_names(self):
-        return self._encoder.classes_
 
     def as_dataframe(self, include_targets=True, include_labels=True):
         index = pd.RangeIndex(len(self.feature_space))
