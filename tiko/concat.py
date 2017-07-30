@@ -18,7 +18,7 @@ def homogeneous_attribute(seq):
 
 
 def concat(*datasets):
-
+    # TODO should be homogeneous_dataset_type
     homogeneous_feature_type = homogeneous_type(datasets)
     if not homogeneous_feature_type:
         raise TypeError('All datasets must be of a homogeneous type.')

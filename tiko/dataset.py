@@ -3,6 +3,7 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
+from types import GeneratorType
 
 from tiko.feature_space import FeatureSpace
 from tiko.features import create_feature
@@ -13,15 +14,15 @@ __all__ = ['LabeledDataSet']
 
 class DataSet(metaclass=ABCMeta):
     def __init__(self, feature_space, feature_names, nominal_features):
-        if not isinstance(feature_space, FeatureSpace):
-            raise TypeError('feature_space must be a tiko.FeatureSpace.')
-        else:
+        if isinstance(feature_space, (FeatureSpace, GeneratorType)):
             self.feature_space = list(feature_space)
+        else:
+            self.feature_space = feature_space
 
         feature_count = feature_space.shape[1]
 
         if len(feature_names) != feature_count:
-            raise ValueError('Number of features and feature_names mismatched')
+            raise ValueError('Number of features and feature_names don\'t match.')
         else:
             self.feature_names = feature_names
 
@@ -38,12 +39,12 @@ class DataSet(metaclass=ABCMeta):
             try:
                 from scipy.sparse import lil_matrix
             except ImportError:
-                raise ImportError('Returning data as sparse requires scipy')
+                raise ImportError('Returning data as sparse requires scipy.')
             else:
                 return lil_matrix(self.feature_space)
 
     @abstractmethod
-    def as_dataframe(self):
+    def to_frame(self):
         pass
 
 
@@ -51,21 +52,18 @@ class UnlabeledDataSet(DataSet):
     def __init__(self, feature_space, feature_names, nominal_features=None):
         super().__init__(feature_space, feature_names, nominal_features)
 
-    def as_dataframe(self):
+    def to_frame(self):
         index = pd.RangeIndex(len(self.feature_space))
         return pd.DataFrame(self.data(sparse=False), index, self.feature_names)
 
 
 class LabeledDataSet(DataSet):
     def __init__(self, feature_space, feature_names, labels, nominal_features=None):
-        # TODO - push nominal_features default specification up one level of abstraction to extract_features
         super().__init__(feature_space, feature_names, nominal_features)
         self._labels = labels
 
     @property
     def labels(self):
-        # TODO Simplify, consequences of EAFP?
-
         if isinstance(self._labels, str):
             return [self._labels] * len(self.feature_space)
         elif isinstance(self._labels, list):
@@ -77,13 +75,10 @@ class LabeledDataSet(DataSet):
         else:
             raise TypeError('Labels must be sequence of strings or a string.')
 
-    def as_dataframe(self, include_targets=True, include_labels=True):
+    def to_frame(self, include_labels=True):
         index = pd.RangeIndex(len(self.feature_space))
 
         df = pd.DataFrame(self.data(sparse=False), index, self.feature_names)
-
-        if include_targets:
-            df.insert(0, 'targets', self.targets)
 
         if include_labels:
             df.insert(0, 'labels', self.labels)
@@ -103,8 +98,16 @@ def dedupe(seq):
     return value
 
 
+def extract_features(features, feature_names, segments=None, nominal_features=None, labels=None):
+    feature_space = FeatureSpace(features, segments)
+    if labels is None:
+        return UnlabeledDataSet(feature_space, feature_names, nominal_features)
+    else:
+        return LabeledDataSet(feature_space, feature_names, labels, nominal_features)
+
+
 # EXPERIMENTAL FEATURE
-def extract_features(config, data, segments=None, user_features=None, default_statistics=None, labels=None, **feature_factory):
+def dataset_from_config(config, data, segments=None, user_features=None, default_statistics=None, labels=None, **feature_factory):
     """
     
     config structure
