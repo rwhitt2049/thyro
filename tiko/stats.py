@@ -1,5 +1,3 @@
-from collections import Callable
-
 import numpy as np
 from scipy import stats
 
@@ -41,14 +39,17 @@ STATISTIC_FACTORY = {
 
 
 def statistic_factory(statistic):
-    if isinstance(statistic, str):
-        try:
-            _statistic = STATISTIC_FACTORY[statistic]
-        except KeyError:
-            raise NotImplementedError('%s is not implemented' % statistic)
-    elif isinstance(statistic, Callable):
-        _statistic = statistic
-    else:
-        raise TypeError('%s must be a callable or a string name for a default statistic.' % statistic)
+    """
+
+    Args:
+        statistic (``str``):
+
+    Returns:
+
+    """
+    try:
+        _statistic = STATISTIC_FACTORY[statistic]
+    except KeyError:
+        raise NotImplementedError('%s is not implemented' % statistic)
 
     return _statistic

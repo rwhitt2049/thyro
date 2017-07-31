@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, PropertyMock
 import numpy as np
 
 from tiko.feature_space import FeatureSpace
-from tiko.features import create_feature
+from tiko.feature import create_feature
 
 ReturnsFS = namedtuple('ReturnsFS', 'len shape segments features iter')
 

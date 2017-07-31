@@ -1,15 +1,36 @@
-from abc import ABCMeta, abstractmethod
-from functools import lru_cache
+import abc
+import functools as ft
 
 import numpy as np
 import pandas as pd
 from types import GeneratorType
 
 from tiko.feature_space import FeatureSpace
-from tiko.features import create_feature
 
 
 __all__ = ['LabeledDataSet']
+
+
+class DataSet(metaclass=abc.ABCMeta):
+    def __init__(self, feature_space):
+        self._feaure_space = feature_space
+        self.feature_names = feature_space.feature_names
+
+    @ft.lru_cache()
+    def data(self, sparse=False):
+        if not sparse:
+            return np.array(self.feature_space)
+        else:
+            try:
+                from scipy.sparse import lil_matrix
+            except ImportError:
+                raise ImportError('Returning data as sparse requires scipy.')
+            else:
+                return lil_matrix(self.feature_space)
+
+    @abc.abstractmethod
+    def to_frame(self):
+        pass
 
 
 class DataSet(metaclass=ABCMeta):
