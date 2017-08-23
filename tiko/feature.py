@@ -39,3 +39,15 @@ class Feature(BaseFeature):
 
         """
         return self.statistic(self.data[item])
+
+
+def feature(data, statistic, name, is_categorical=False):
+    if isinstance(statistic, str):
+        statistic = statistic_factory(statistic)
+
+    try:
+        assert isinstance(statistic, typing.Callable)
+    except AssertionError as e:
+        raise TypeError('statistic must be a string name of a valid stat or a callable')
+
+    return Feature(data, statistic, name, is_categorical)
