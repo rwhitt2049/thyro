@@ -1,205 +1,79 @@
 import abc
-import functools as ft
 
 import numpy as np
 import pandas as pd
-from types import GeneratorType
 
-from tiko.feature_space import FeatureSpace
-
-
-__all__ = ['LabeledDataSet']
+__all__ = ['extract_features', 'concat']
 
 
-class DataSet(metaclass=abc.ABCMeta):
-    def __init__(self, feature_space):
-        self._feaure_space = feature_space
-        self.feature_names = feature_space.feature_names
-
-    @ft.lru_cache()
-    def data(self, sparse=False):
-        if not sparse:
-            return np.array(self.feature_space)
-        else:
-            try:
-                from scipy.sparse import lil_matrix
-            except ImportError:
-                raise ImportError('Returning data as sparse requires scipy.')
-            else:
-                return lil_matrix(self.feature_space)
-
-    @abc.abstractmethod
-    def to_frame(self):
-        pass
+def gen_feature_space(features, segments):
+    for segment in segments:
+        yield tuple(feature(segment) for feature in features)
 
 
-class DataSet(metaclass=ABCMeta):
-    def __init__(self, feature_space, feature_names, nominal_features):
-        if isinstance(feature_space, (FeatureSpace, GeneratorType)):
-            self.feature_space = list(feature_space)
-        else:
-            self.feature_space = feature_space
+def extract_features(features, segments=None, labels=None):
+    if isinstance(labels, str):
+        labels = [labels] * len(segments)
+    if segments is None:
+        segments = [slice(None, None)]
+    feature_names = [feature.name for feature in features]
+    categorical_features = [feature.is_categorical for feature in features]
+    feature_space = list(gen_feature_space(features, segments))
 
-        feature_count = feature_space.shape[1]
+    index = pd.RangeIndex(len(feature_space))
+    df = pd.DataFrame(feature_space, index=index, columns=feature_names)
 
-        if len(feature_names) != feature_count:
-            raise ValueError('Number of features and feature_names don\'t match.')
-        else:
-            self.feature_names = feature_names
+    if labels:
+        return LabeledDataSet(feature_names, labels, categorical_features, df)
+    else:
+        # return UnlabeledDataSet(feature_space, categorical_features)
+        raise NotImplemented('currently only unlabeled data supported')
 
-        if nominal_features is None:
-            nominal_features = [False] * feature_count
 
-        self.nominal_features = nominal_features
+class DataSet(abc.ABC):
+    def __init__(self, data, categorical_features):
+        self.categorical_features = categorical_features
+        self._data = data
 
-    @lru_cache()
-    def data(self, sparse=False):
-        if not sparse:
-            return np.array(self.feature_space)
-        else:
-            try:
-                from scipy.sparse import lil_matrix
-            except ImportError:
-                raise ImportError('Returning data as sparse requires scipy.')
-            else:
-                return lil_matrix(self.feature_space)
+    def __getattr__(self, item):
+        return getattr(self._data, item)
 
-    @abstractmethod
-    def to_frame(self):
-        pass
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __str__(self):
+        return str(self._data)
+
+    def __repr__(self):
+        return repr(self._data)
+
+    def __dir__(self):
+        return super().__dir__() + dir(self._data)
 
 
 class UnlabeledDataSet(DataSet):
-    def __init__(self, feature_space, feature_names, nominal_features=None):
-        super().__init__(feature_space, feature_names, nominal_features)
-
-    def to_frame(self):
-        index = pd.RangeIndex(len(self.feature_space))
-        return pd.DataFrame(self.data(sparse=False), index, self.feature_names)
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
 
 
 class LabeledDataSet(DataSet):
-    def __init__(self, feature_space, feature_names, labels, nominal_features=None):
-        super().__init__(feature_space, feature_names, nominal_features)
-        self._labels = labels
-
-    @property
-    def labels(self):
-        if isinstance(self._labels, str):
-            return [self._labels] * len(self.feature_space)
-        elif isinstance(self._labels, list):
-            if len(self._labels) != len(self.feature_space):
-                raise ValueError('If labels are specified as a sequence, their length'
-                                 'must equal the number of feature vectors in feature_space')
-            else:
-                return self._labels
-        else:
-            raise TypeError('Labels must be sequence of strings or a string.')
-
-    def to_frame(self, include_labels=True):
-        index = pd.RangeIndex(len(self.feature_space))
-
-        df = pd.DataFrame(self.data(sparse=False), index, self.feature_names)
-
-        if include_labels:
-            df.insert(0, 'labels', self.labels)
-
-        return df
+    def __init__(self, labels, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.labels = labels
 
 
-def dedupe(seq):
-    value = []
-    uniques = set()
-    set_add = uniques.add
-    for item in seq:
-        if item not in uniques:
-            value.append(item)
-        set_add(item)
+def concat(*datasets):
+    # check all same type
+    # check categorical features are the same
+    # call pd.concat
 
-    return value
-
-
-def extract_features(features, feature_names, segments=None, nominal_features=None, labels=None):
-    feature_space = FeatureSpace(features, segments)
-    if labels is None:
-        return UnlabeledDataSet(feature_space, feature_names, nominal_features)
+    if datasets:
+        categorical_features = datasets[0].categorical_features
     else:
-        return LabeledDataSet(feature_space, feature_names, labels, nominal_features)
+        categorical_features = []
 
-
-# EXPERIMENTAL FEATURE
-def dataset_from_config(config, data, segments=None, user_features=None, default_statistics=None, labels=None, **feature_factory):
-    """
-    
-    config structure
-    
-    list of dicts
-    dicts with keys
-        signal_name: str
-        display_name: str
-        statistics: list of str
-        is_nominal: bool
-        apply_default_statistics: bool
-    
-    Args:
-        config: 
-        data: 
-        segments: 
-        user_features: 
-        default_statistics: 
-        labels: 
-
-    Returns:
-
-    """
-    import warnings; warnings.warn('THIS IS EXPERIMENT AND SUBJECT TO CHANGE SIGNIFICANTLY')
-    # TODO rename to extract_features, extract_featureset... ?
-
-    if not hasattr(data, '__getitem__'):
-        raise TypeError('Your data must have a defined __getitem__ method')
-
-    if user_features is None:
-        user_features = []
-
-    if segments is None:
-        segments = [slice(None, None)]
-
-    features = user_features
-    nominal_features = [feature.is_nominal for feature in user_features]
-    feature_names = [feature.name for feature in user_features]
-
-    for settings in config:
-        signal_name = settings['signal_name']
-        signal = data[signal_name]
-        statistics = settings.get('statistics', [])
-        apply_default_statistics = settings.get('apply_default_statistics', True)
-        is_nominal = settings.get('is_nominal', False)
-        display_name = settings.get('display_name', signal_name)
-
-        if apply_default_statistics:
-            statistics += list(set(default_statistics) - set(statistics))
-        elif not statistics:
-            raise ValueError('No statistics defined for %s' % signal_name)
-
-        for statistic in statistics:
-            if statistic in feature_factory:
-                feature = create_feature(signal, feature_factory[statistic])
-            else:
-                feature = create_feature(signal, statistic)
-
-            features.append(feature)
-            feature_names.append('_'.join([display_name, statistic]))
-            nominal_features.append(is_nominal)
-
-    feature_space = FeatureSpace(*user_features, segments=segments)
-
-    feature_space_array = np.array(list(feature_space))
-
-    if labels is None:
-        dataset = UnlabeledDataSet(feature_space_array, feature_names,
-                                   nominal_features=nominal_features)
-    else:
-        dataset = LabeledDataSet(feature_space_array, feature_names, labels=labels,
-                                 nominal_features=nominal_features)
-
-    return dataset
+    df = pd.concat(datasets)
+    return UnlabeledDataSet(df, categorical_features)
