@@ -1,37 +1,32 @@
-from abc import ABCMeta, abstractmethod
+import abc
 import typing
 
 from .stats import statistic_factory
 
-__all__ = ['Feature', 'BaseFeature']
+__all__ = ['Feature', 'feature']
 
 
-class BaseFeature(metaclass=ABCMeta):
-    @abstractmethod
+class BaseFeature(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
     def __call__(self, item):
         pass
 
-# TODO: Statistic should only ever be a callable, no more "or"s in arguments
+
 class Feature(BaseFeature):
-    def __init__(self, data, statistic, name, is_nominal=False):
+    def __init__(self, data, statistic, name, is_categorical=False):
         """
 
         Args:
-            data (``numpy.array``):
-            statistic (``str`` or callable):
+            data (``numpy.ndarray``):
+            statistic (``Callable``):
             name (``str``):
-            is_nominal (``bool``):
+            is_categorical (``bool``):
         """
 
         self.data = data
         self.name = name
-        self.is_nominal = is_nominal
-        if isinstance(statistic, str):
-            self.statistic = statistic_factory(statistic)
-        elif isinstance(statistic, typing.Callable):
-            self.statistic = statistic
-        else:
-            raise TypeError('statistic must be a string name or a callable')
+        self.is_nominal = is_categorical
+        self.statistic = statistic
 
     def __call__(self, item):
         """
