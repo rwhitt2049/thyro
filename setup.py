@@ -26,14 +26,14 @@ def long_description():
 kwargs = dict(
     name='tiko',
     version=__version__,
-    description='Create feature spaces from time series data for machine learning',
+    description='Extract features from time series data for machine learning',
     long_description=long_description(),
     author='Ry Whittington',
     author_email='rwhitt2049@gmail.com',
     license='MIT',
     url='https://github.com/rwhitt2049/tiko',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
@@ -45,7 +45,7 @@ kwargs = dict(
         'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering'
     ],
-    keywords='time_series, timeseries, iot, sensor',
+    keywords='time_series, timeseries, iot, sensor, machine_learning',
     packages=find_packages(exclude=['contrib', 'documentation', 'tests*']),
     install_requires=install_requires(),
     package_data={},

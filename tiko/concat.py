@@ -1,47 +1,51 @@
 import itertools
 
-import numpy as np
+import pandas as pd
 
 from .dataset import UnlabeledDataSet, LabeledDataSet
 
 
 def homogeneous_type(seq):
-    iseq = iter(seq)
-    first_type = type(next(iseq))
-    return first_type if all((type(x) is first_type) for x in iseq) else False
+    i_seq = iter(seq)
+    first_type = type(next(i_seq))
+    return first_type if all((type(x) is first_type) for x in i_seq) else False
 
 
 def homogeneous_attribute(seq):
-    iseq = iter(seq)
-    first_attribute = next(iseq)
-    return first_attribute if all(x == first_attribute for x in iseq) else False
+    i_seq = iter(seq)
+    first_attribute = next(i_seq)
+    return first_attribute if all(x == first_attribute for x in i_seq) else False
 
 
 def concat(*datasets):
-    # TODO should be homogeneous_dataset_type
     homogeneous_feature_type = homogeneous_type(datasets)
     if not homogeneous_feature_type:
         raise TypeError('All datasets must be of a homogeneous type.')
 
-    homogeneous_feature_names = homogeneous_attribute([dataset.feature_names for dataset in datasets])
+    homogeneous_feature_names = homogeneous_attribute(
+        [dataset.feature_names for dataset in datasets]
+    )
     if not homogeneous_feature_names:
-        raise TypeError('All datasets must have homogeneous feature_names.')
+        raise ValueError('All datasets must have homogeneous feature_names.')
 
-    homogeneous_nominal_features = homogeneous_attribute([dataset.nominal_features for dataset in datasets])
+    homogeneous_nominal_features = homogeneous_attribute(
+        [dataset.categorical_features for dataset in datasets]
+    )
     if not homogeneous_nominal_features:
-        raise TypeError('All datasets must have homogeneous nominal_features.')
+        raise ValueError('All datasets must have homogeneous nominal_features.')
 
-    new_feature_space = np.vstack([dataset.feature_space for dataset in datasets])
+    data = pd.concat(datasets)
 
     if homogeneous_feature_type is UnlabeledDataSet:
-        new_dataset = homogeneous_feature_type(new_feature_space, homogeneous_feature_names,
-                                               homogeneous_nominal_features)
+        new_dataset = UnlabeledDataSet(data,
+                                       homogeneous_nominal_features)
     elif homogeneous_feature_type is LabeledDataSet:
         all_labels = [dataset.labels for dataset in datasets]
         new_labels = list(itertools.chain.from_iterable(all_labels))
-        new_dataset = homogeneous_feature_type(new_feature_space, homogeneous_feature_names,
-                                               new_labels, homogeneous_nominal_features)
+        new_dataset = LabeledDataSet(new_labels,
+                                     data,
+                                     homogeneous_nominal_features)
     else:
-        raise TypeError('Don\'t know how to concatenate this type of DataSet')
+        raise TypeError('Can\'t concatenate this type of DataSet')
 
     return new_dataset

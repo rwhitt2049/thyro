@@ -4,7 +4,7 @@ import numpy as np
 from typing import Callable
 
 from tests.testing_utils import TEST_SIGNAL
-from tiko.features import create_feature, Feature
+from tiko.feature import create_feature, Feature
 
 
 class TestFeatureFunction(TestCase):
@@ -49,7 +49,7 @@ class TestFeatureCallableClass(TestCase):
             Feature(self.data, np.mean, 'test', 'nominal')
 
     def test_is_nominal(self):
-        self.assertFalse(self.feature.is_nominal)
+        self.assertFalse(self.feature.is_categorical)
 
 
 class TestFeatureOperationTypeError(TestCase):
