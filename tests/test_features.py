@@ -49,7 +49,7 @@ class TestFeatureCallableClass(TestCase):
             Feature(self.data, np.mean, 'test', 'nominal')
 
     def test_is_nominal(self):
-        self.assertFalse(self.feature.is_nominal)
+        self.assertFalse(self.feature.is_categorical)
 
 
 class TestFeatureOperationTypeError(TestCase):

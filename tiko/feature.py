@@ -3,7 +3,7 @@ import typing
 
 from .stats import statistic_factory
 
-__all__ = ['Feature', 'feature']
+__all__ = ['feature']
 
 
 class BaseFeature(metaclass=abc.ABCMeta):
@@ -25,7 +25,7 @@ class Feature(BaseFeature):
 
         self.data = data
         self.name = name
-        self.is_nominal = is_categorical
+        self.is_categorical = is_categorical
         self.statistic = statistic
 
     def __call__(self, item):
@@ -35,6 +35,7 @@ class Feature(BaseFeature):
             item (``slice``):
 
         Returns:
+            ``float``:
 
 
         """
