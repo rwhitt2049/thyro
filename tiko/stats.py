@@ -5,7 +5,7 @@ from scipy import stats
 __all__ = ['register_stat']
 
 
-STATISTIC_FACTORY = {
+statistic_factory = {
     'min': np.min,
     'max': np.max,
     'mean': np.mean,
@@ -13,15 +13,10 @@ STATISTIC_FACTORY = {
     'std': np.std,
     'sum': np.sum,
     'cumsum': np.cumsum,
-    # 'mode': mode,
-    # 'mode_count': mode_count,
-    # 'first': first,
-    # 'last': last,
-    # 'delta': delta
 }
 
 
-def register_stat(func=None):
+def register_stat(func=None, name=None):
     """Function to register stats callables.
 
     Decorator to register user defined stats function. Can be called
@@ -30,23 +25,29 @@ def register_stat(func=None):
 
     Args:
         func (``Callable``): Function to register.
+        name (``str``, optional): If not provided, function is
+            registered as it's name.
 
     Returns:
-        ``Callable``: if used as decorator, other returns ``None``
+        ``Callable``: If used as decorator.
+        ``None``: If used as a function
 
     Raises:
-        ``KeyError``: If function exists in tiko.stats.STATISTIC_FACTORY
+        ``KeyError``: If function exists in ``tiko.stats.statistic_factory``
 
     Examples:
         >>>
 
     """
     def inner(func_):
-        name = func_.__name__
-        if name not in STATISTIC_FACTORY:
-            STATISTIC_FACTORY[func_.__name__] = func_
-        else:
+        nonlocal name
+        if name is None:
+            name = func_.__name__
+
+        if name in statistic_factory:
             raise KeyError('Function already exists. Chose a new name for %s' % name)
+
+        statistic_factory[name] = func_
         return func_
 
     if func is None:
@@ -78,24 +79,3 @@ def last(a):
 @register_stat
 def delta(a):
     return last(a) - first(a)
-
-
-def statistic_factory(statistic):
-    """
-
-    Args:
-        statistic (``str``): Statistic string name
-
-    Returns:
-        ``Callable``:
-
-    Raises:
-        ``ValueError``: If stat doesn't exist in ``STATISTIC_FACTORY``
-
-    """
-    try:
-        _statistic = STATISTIC_FACTORY[statistic]
-    except KeyError:
-        raise ValueError('%s is not a valid stat name' % statistic)
-
-    return _statistic

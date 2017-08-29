@@ -43,7 +43,7 @@ class Feature(BaseFeature):
 
 def feature(data, statistic, name, is_categorical=False):
     if isinstance(statistic, str):
-        statistic = statistic_factory(statistic)
+        statistic = statistic_factory[statistic]
 
     try:
         assert isinstance(statistic, typing.Callable)
