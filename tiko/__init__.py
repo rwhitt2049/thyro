@@ -3,4 +3,4 @@ from .feature import *
 from .stats import *
 from .concat import *
 
-__version__ = '0.1.0a6'
+__version__ = '0.1.0-beta1'
